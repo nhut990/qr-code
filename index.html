@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tạo Mã QR - Nhiều Chức Năng</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .form-section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .tab-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .tab-btn {
+            padding: 12px 15px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+        }
+        
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .tab-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .form-content {
+            display: none;
+        }
+        
+        .form-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+        
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            grid-column: span 2;
+        }
+        
+        .btn-generate:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-download {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-download:hover {
+            background: #45a049;
+        }
+        
+        .btn-download:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-copy {
+            background: #2196F3;
+            color: white;
+        }
+        
+        .btn-copy:hover {
+            background: #0b7dda;
+        }
+        
+        .btn-clear {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-clear:hover {
+            background: #da190b;
+        }
+        
+        .qr-display {
+            text-align: center;
+        }
+        
+        #qrcode {
+            display: inline-block;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        #qrcode canvas {
+            display: block;
+            margin: 0 auto;
+        }
+        
+        .qr-info {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        
+        .qr-info h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .qr-info p {
+            color: #555;
+            word-break: break-all;
+            font-size: 0.9em;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+        }
+        
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 1.8em;
+            }
+            
+            .tab-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Tạo Mã QR Đa Chức Năng</h1>
+            <p>Tạo mã QR cho Wifi, Danh bạ, Văn bản, Website và nhiều hơn nữa</p>
+        </div>
+        
+        <div class="content">
+            <!-- Form Section -->
+            <div class="card form-section">
+                <h2>Chọn Loại Mã QR</h2>
+                
+                <div class="tab-buttons">
+                    <button class="tab-btn active" onclick="switchTab('url')">🌐 Website</button>
+                    <button class="tab-btn" onclick="switchTab('text')">📝 Văn Bản</button>
+                    <button class="tab-btn" onclick="switchTab('wifi')">📶 Wifi</button>
+                    <button class="tab-btn" onclick="switchTab('contact')">👤 Danh Bạ</button>
+                    <button class="tab-btn" onclick="switchTab('email')">📧 Email</button>
+                    <button class="tab-btn" onclick="switchTab('phone')">☎️ Điện Thoại</button>
+                    <button class="tab-btn" onclick="switchTab('sms')">💬 Tin Nhắn</button>
+                    <button class="tab-btn" onclick="switchTab('location')">📍 Vị Trí</button>
+                </div>
+                
+                <!-- URL Tab -->
+                <div id="url" class="form-content active">
+                    <div class="form-group">
+                        <label>URL Website</label>
+                        <input type="url" id="url-input" placeholder="https://example.com" value="">
+                    </div>
+                </div>
+                
+                <!-- Text Tab -->
+                <div id="text" class="form-content">
+                    <div class="form-group">
+                        <label>Nội Dung Văn Bản</label>
+                        <textarea id="text-input" placeholder="Nhập văn bản cần mã hóa..."></textarea>
+                    </div>
+                </div>
+                
+                <!-- WiFi Tab -->
+                <div id="wifi" class="form-content">
+                    <div class="form-group">
+                        <label>Tên Mạng (SSID)</label>
+                        <input type="text" id="wifi-ssid" placeholder="Tên wifi của bạn">
+                    </div>
+                    <div class="form-group">
+                        <label>Mật Khẩu</label>
+                        <input type="password" id="wifi-password" placeholder="Mật khẩu wifi">
+                    </div>
+                    <div class="form-group">
+                        <label>Loại Bảo Mật</label>
+                        <select id="wifi-security">
+                            <option value="WPA">WPA/WPA2</option>
+                            <option value="WEP">WEP</option>
+                            <option value="nopass">Không có mật khẩu</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Contact Tab -->
+                <div id="contact" class="form-content">
+                    <div class="form-group">
+                        <label>Họ và Tên</label>
+                        <input type="text" id="contact-name" placeholder="Tên đầy đủ">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Điện Thoại</label>
+                            <input type="tel" id="contact-phone" placeholder="Số điện thoại">
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="contact-email" placeholder="Email">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Công Ty</label>
+                        <input type="text" id="contact-company" placeholder="Tên công ty">
+                    </div>
+                    <div class="form-group">
+                        <label>Địa Chỉ</label>
+                        <input type="text" id="contact-address" placeholder="Địa chỉ">
+                    </div>
+                </div>
+                
+                <!-- Email Tab -->
+                <div id="email" class="form-content">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="email-input" placeholder="example@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Chủ Đề</label>
+                        <input type="text" id="email-subject" placeholder="Chủ đề email">
+                    </div>
+                    <div class="form-group">
+                        <label>Nội Dung</label>
+                        <textarea id="email-body" placeholder="Nội dung email"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Phone Tab -->
+                <div id="phone" class="form-content">
+                    <div class="form-group">
+                        <label>Số Điện Thoại</label>
+                        <input type="tel" id="phone-input" placeholder="Số điện thoại">
+                    </div>
+                </div>
+                
+                <!-- SMS Tab -->
+                <div id="sms" class="form-content">
+                    <div class="form-group">
+                        <label>Số Điện Thoại</label>
+                        <input type="tel" id="sms-phone" placeholder="Số điện thoại">
+                    </div>
+                    <div class="form-group">
+                        <label>Nội Dung Tin Nhắn</label>
+                        <textarea id="sms-message" placeholder="Nội dung tin nhắn"></textarea>
+                    </div>
+                </div>
+                
+                <!-- Location Tab -->
+                <div id="location" class="form-content">
+                    <div class="form-group">
+                        <label>Vĩ Độ (Latitude)</label>
+                        <input type="number" id="location-lat" placeholder="21.0285" step="0.0001">
+                    </div>
+                    <div class="form-group">
+                        <label>Kinh Độ (Longitude)</label>
+                        <input type="number" id="location-lng" placeholder="105.8542" step="0.0001">
+                    </div>
+                    <div class="form-group">
+                        <label>Tên Địa Điểm (Tùy chọn)</label>
+                        <input type="text" id="location-name" placeholder="Tên địa điểm">
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-generate" onclick="generateQR()">Tạo Mã QR</button>
+                    <button class="btn btn-clear" onclick="clearForm()">Xóa</button>
+                </div>
+            </div>
+            
+            <!-- QR Display Section -->
+            <div class="card qr-display">
+                <h2 style="margin-bottom: 20px; color: #667eea;">Mã QR Của Bạn</h2>
+                
+                <div id="message"></div>
+                <div id="qrcode"></div>
+                
+                <div id="qr-info" class="qr-info" style="display: none;">
+                    <h3>Nội Dung Mã QR:</h3>
+                    <p id="qr-content"></p>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-download" id="download-btn" onclick="downloadQR()" disabled>📥 Tải Xuống</button>
+                    <button class="btn btn-copy" id="copy-btn" onclick="copyToClipboard()" disabled>📋 Sao Chép</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentQRData = null;
+        let currentQRCode = null;
+        let currentTab = 'url';
+        
+        function switchTab(tab) {
+            // Hide all content
+            document.querySelectorAll('.form-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Remove active state from buttons
+            document.querySelectorAll('.tab-btn').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // Show selected content
+            document.getElementById(tab).classList.add('active');
+            
+            // Add active state to clicked button
+            event.target.classList.add('active');
+            
+            currentTab = tab;
+            clearMessage();
+        }
+        
+        function generateQRData() {
+            const tab = currentTab;
+            
+            switch(tab) {
+                case 'url':
+                    const url = document.getElementById('url-input').value.trim();
+                    if (!url) {
+                        showError('Vui lòng nhập URL');
+                        return null;
+                    }
+                    return url;
+                
+                case 'text':
+                    const text = document.getElementById('text-input').value.trim();
+                    if (!text) {
+                        showError('Vui lòng nhập văn bản');
+                        return null;
+                    }
+                    return text;
+                
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value.trim();
+                    const password = document.getElementById('wifi-password').value.trim();
+                    const security = document.getElementById('wifi-security').value;
+                    
+                    if (!ssid) {
+                        showError('Vui lòng nhập tên mạng Wifi');
+                        return null;
+                    }
+                    
+                    let wifiString = `WIFI:T:${security};S:${ssid};`;
+                    if (password && security !== 'nopass') {
+                        wifiString += `P:${password};`;
+                    }
+                    wifiString += ';';
+                    return wifiString;
+                
+                case 'contact':
+                    const name = document.getElementById('contact-name').value.trim();
+                    const phone = document.getElementById('contact-phone').value.trim();
+                    const email = document.getElementById('contact-email').value.trim();
+                    const company = document.getElementById('contact-company').value.trim();
+                    const address = document.getElementById('contact-address').value.trim();
+                    
+                    if (!name) {
+                        showError('Vui lòng nhập tên');
+                        return null;
+                    }
+                    
+                    let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
+                    vcard += `FN:${name}\n`;
+                    if (phone) vcard += `TEL:${phone}\n`;
+                    if (email) vcard += `EMAIL:${email}\n`;
+                    if (company) vcard += `ORG:${company}\n`;
+                    if (address) vcard += `ADR:;;${address}\n`;
+                    vcard += 'END:VCARD';
+                    return vcard;
+                
+                case 'email':
+                    const emailAddr = document.getElementById('email-input').value.trim();
+                    const subject = document.getElementById('email-subject').value.trim();
+                    const body = document.getElementById('email-body').value.trim();
+                    
+                    if (!emailAddr) {
+                        showError('Vui lòng nhập email');
+                        return null;
+                    }
+                    
+                    let emailString = `mailto:${emailAddr}`;
+                    const params = [];
+                    if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
+                    if (body) params.push(`body=${encodeURIComponent(body)}`);
+                    if (params.length > 0) emailString += '?' + params.join('&');
+                    return emailString;
+                
+                case 'phone':
+                    const phoneNum = document.getElementById('phone-input').value.trim();
+                    if (!phoneNum) {
+                        showError('Vui lòng nhập số điện thoại');
+                        return null;
+                    }
+                    return `tel:${phoneNum}`;
+                
+                case 'sms':
+                    const smsPhone = document.getElementById('sms-phone').value.trim();
+                    const smsMsg = document.getElementById('sms-message').value.trim();
+                    
+                    if (!smsPhone) {
+                        showError('Vui lòng nhập số điện thoại');
+                        return null;
+                    }
+                    
+                    let smsString = `smsto:${smsPhone}`;
+                    if (smsMsg) smsString += `:${encodeURIComponent(smsMsg)}`;
+                    return smsString;
+                
+                case 'location':
+                    const lat = document.getElementById('location-lat').value.trim();
+                    const lng = document.getElementById('location-lng').value.trim();
+                    
+                    if (!lat || !lng) {
+                        showError('Vui lòng nhập vĩ độ và kinh độ');
+                        return null;
+                    }
+                    
+                    let locationString = `geo:${lat},${lng}`;
+                    const locName = document.getElementById('location-name').value.trim();
+                    if (locName) locationString += `?q=${encodeURIComponent(locName)}`;
+                    return locationString;
+                
+                default:
+                    return null;
+            }
+        }
+        
+        function generateQR() {
+            clearMessage();
+            const data = generateQRData();
+            
+            if (!data) return;
+            
+            currentQRData = data;
+            
+            // Clear previous QR code
+            document.getElementById('qrcode').innerHTML = '';
+            
+            // Generate new QR code
+            currentQRCode = new QRCode(document.getElementById('qrcode'), {
+                text: data,
+                width: 250,
+                height: 250,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            
+            // Show QR info
+            document.getElementById('qr-info').style.display = 'block';
+            document.getElementById('qr-content').textContent = data;
+            
+            // Enable download and copy buttons
+            document.getElementById('download-btn').disabled = false;
+            document.getElementById('copy-btn').disabled = false;
+            
+            showSuccess('✓ Tạo mã QR thành công!');
+        }
+        
+        function downloadQR() {
+            if (!currentQRCode) return;
+            
+            const canvas = document.querySelector('#qrcode canvas');
+            if (!canvas) return;
+            
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = 'qr-code.png';
+            link.click();
+            
+            showSuccess('✓ Tải xuống thành công!');
+        }
+        
+        function copyToClipboard() {
+            if (!currentQRData) return;
+            
+            navigator.clipboard.writeText(currentQRData).then(() => {
+                showSuccess('✓ Sao chép thành công!');
+            }).catch(() => {
+                showError('Không thể sao chép');
+            });
+        }
+        
+        function clearForm() {
+            // Clear all inputs based on current tab
+            document.querySelectorAll('input, textarea').forEach(el => {
+                el.value = '';
+            });
+            
+            document.getElementById('qrcode').innerHTML = '';
+            document.getElementById('qr-info').style.display = 'none';
+            document.getElementById('download-btn').disabled = true;
+            document.getElementById('copy-btn').disabled = true;
+            clearMessage();
+            
+            currentQRData = null;
+            currentQRCode = null;
+        }
+        
+        function showSuccess(message) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = 'message success';
+            messageDiv.textContent = message;
+        }
+        
+        function showError(message) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.className = 'message error';
+            messageDiv.textContent = '✗ ' + message;
+        }
+        
+        function clearMessage() {
+            document.getElementById('message').innerHTML = '';
+        }
+        
+        // Set default values for location
+        window.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('location-lat').value = '21.0285';
+            document.getElementById('location-lng').value = '105.8542';
+        });
+    </script>
+</body>
+</html>
