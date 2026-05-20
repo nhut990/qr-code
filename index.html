@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tạo Mã QR - Nhiều Chức Năng</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Thư viện QRCode mới, hỗ trợ tiếng Việt -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -208,8 +209,10 @@
         }
         
         #qrcode {
-            display: inline-block;
-            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 250px;
             background: white;
             border-radius: 10px;
             margin-bottom: 20px;
@@ -218,6 +221,8 @@
         #qrcode canvas {
             display: block;
             margin: 0 auto;
+            max-width: 100%;
+            height: auto;
         }
         
         .qr-info {
@@ -296,14 +301,14 @@
                 <h2>Chọn Loại Mã QR</h2>
                 
                 <div class="tab-buttons">
-                    <button class="tab-btn active" onclick="switchTab('url')">🌐 Website</button>
-                    <button class="tab-btn" onclick="switchTab('text')">📝 Văn Bản</button>
-                    <button class="tab-btn" onclick="switchTab('wifi')">📶 Wifi</button>
-                    <button class="tab-btn" onclick="switchTab('contact')">👤 Danh Bạ</button>
-                    <button class="tab-btn" onclick="switchTab('email')">📧 Email</button>
-                    <button class="tab-btn" onclick="switchTab('phone')">☎️ Điện Thoại</button>
-                    <button class="tab-btn" onclick="switchTab('sms')">💬 Tin Nhắn</button>
-                    <button class="tab-btn" onclick="switchTab('location')">📍 Vị Trí</button>
+                    <button class="tab-btn active" data-tab="url">🌐 Website</button>
+                    <button class="tab-btn" data-tab="text">📝 Văn Bản</button>
+                    <button class="tab-btn" data-tab="wifi">📶 Wifi</button>
+                    <button class="tab-btn" data-tab="contact">👤 Danh Bạ</button>
+                    <button class="tab-btn" data-tab="email">📧 Email</button>
+                    <button class="tab-btn" data-tab="phone">☎️ Điện Thoại</button>
+                    <button class="tab-btn" data-tab="sms">💬 Tin Nhắn</button>
+                    <button class="tab-btn" data-tab="location">📍 Vị Trí</button>
                 </div>
                 
                 <!-- URL Tab -->
@@ -363,7 +368,7 @@
                         <input type="text" id="contact-company" placeholder="Tên công ty">
                     </div>
                     <div class="form-group">
-                        <label>Đ��a Chỉ</label>
+                        <label>Địa Chỉ</label>  <!-- Đã sửa lỗi font -->
                         <input type="text" id="contact-address" placeholder="Địa chỉ">
                     </div>
                 </div>
@@ -422,7 +427,7 @@
                 
                 <div class="button-group">
                     <button class="btn btn-generate" onclick="generateQR()">Tạo Mã QR</button>
-                    <button class="btn btn-clear" onclick="clearForm()">Xóa</button>
+                    <button class="btn btn-clear" onclick="clearCurrentTab()">Xóa Tab Hiện Tại</button>
                 </div>
             </div>
             
@@ -452,30 +457,39 @@
     
     <script>
         let currentQRData = null;
-        let currentQRCode = null;
+        let currentCanvas = null;   // Lưu canvas hiện tại để tải ảnh
         let currentTab = 'url';
         
+        // Xử lý chuyển tab (sửa lỗi event)
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                const tab = this.getAttribute('data-tab');
+                switchTab(tab);
+            });
+        });
+        
         function switchTab(tab) {
-            // Hide all content
+            // Ẩn tất cả form content
             document.querySelectorAll('.form-content').forEach(el => {
                 el.classList.remove('active');
             });
-            
-            // Remove active state from buttons
+            // Xóa active class khỏi tất cả nút
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('active');
             });
-            
-            // Show selected content
+            // Hiện tab được chọn
             document.getElementById(tab).classList.add('active');
-            
-            // Add active state to clicked button
-            event.target.classList.add('active');
+            // Active nút tương ứng
+            document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
             
             currentTab = tab;
+            
+            // Xóa QR cũ khi chuyển tab (tránh nhầm lẫn)
+            clearQRDisplay();
             clearMessage();
         }
         
+        // Hàm tạo nội dung QR dựa trên tab hiện tại
         function generateQRData() {
             const tab = currentTab;
             
@@ -498,7 +512,7 @@
                 
                 case 'wifi':
                     const ssid = document.getElementById('wifi-ssid').value.trim();
-                    const password = document.getElementById('wifi-password').value.trim();
+                    const password = document.getElementById('wifi-password').value;
                     const security = document.getElementById('wifi-security').value;
                     
                     if (!ssid) {
@@ -591,52 +605,66 @@
             }
         }
         
-        function generateQR() {
+        // Tạo QR code sử dụng thư viện QRCode mới (hỗ trợ tiếng Việt)
+        async function generateQR() {
             clearMessage();
             const data = generateQRData();
-            
             if (!data) return;
             
             currentQRData = data;
             
-            // Clear previous QR code
-            document.getElementById('qrcode').innerHTML = '';
+            // Xóa nội dung cũ
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
             
-            // Generate new QR code
-            currentQRCode = new QRCode(document.getElementById('qrcode'), {
-                text: data,
-                width: 250,
-                height: 250,
-                colorDark: '#000000',
-                colorLight: '#ffffff',
-                correctLevel: QRCode.CorrectLevel.H
-            });
+            // Tạo canvas mới
+            const canvas = document.createElement('canvas');
+            canvas.width = 250;
+            canvas.height = 250;
+            qrcodeDiv.appendChild(canvas);
             
-            // Show QR info
-            document.getElementById('qr-info').style.display = 'block';
-            document.getElementById('qr-content').textContent = data;
-            
-            // Enable download and copy buttons
-            document.getElementById('download-btn').disabled = false;
-            document.getElementById('copy-btn').disabled = false;
-            
-            showSuccess('✓ Tạo mã QR thành công!');
+            try {
+                // Dùng thư viện qrcode để vẽ lên canvas
+                await QRCode.toCanvas(canvas, data, {
+                    width: 250,
+                    margin: 2,
+                    color: {
+                        dark: '#000000',
+                        light: '#ffffff'
+                    },
+                    errorCorrectionLevel: 'H'
+                });
+                
+                currentCanvas = canvas;
+                
+                // Hiển thị thông tin
+                document.getElementById('qr-info').style.display = 'block';
+                document.getElementById('qr-content').textContent = data;
+                
+                // Kích hoạt nút
+                document.getElementById('download-btn').disabled = false;
+                document.getElementById('copy-btn').disabled = false;
+                
+                showSuccess('✓ Tạo mã QR thành công!');
+            } catch (err) {
+                console.error(err);
+                showError('Lỗi khi tạo mã QR: ' + err.message);
+            }
         }
         
+        // Tải ảnh QR
         function downloadQR() {
-            if (!currentQRCode) return;
-            
-            const canvas = document.querySelector('#qrcode canvas');
-            if (!canvas) return;
+            if (!currentCanvas) return;
             
             const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
+            link.href = currentCanvas.toDataURL('image/png');
             link.download = 'qr-code.png';
             link.click();
             
             showSuccess('✓ Tải xuống thành công!');
         }
         
+        // Sao chép nội dung QR
         function copyToClipboard() {
             if (!currentQRData) return;
             
@@ -647,39 +675,58 @@
             });
         }
         
-        function clearForm() {
-            // Clear all inputs based on current tab
-            document.querySelectorAll('input, textarea').forEach(el => {
-                el.value = '';
+        // Xóa dữ liệu chỉ trong tab hiện tại
+        function clearCurrentTab() {
+            // Lấy tất cả input, textarea trong tab đang active
+            const activeTab = document.getElementById(currentTab);
+            const inputs = activeTab.querySelectorAll('input, textarea');
+            inputs.forEach(input => {
+                if (input.type !== 'button' && input.type !== 'submit') {
+                    input.value = '';
+                }
             });
             
-            document.getElementById('qrcode').innerHTML = '';
+            // Xóa QR hiển thị
+            clearQRDisplay();
+            clearMessage();
+        }
+        
+        // Xóa QR và reset trạng thái nút
+        function clearQRDisplay() {
+            const qrcodeDiv = document.getElementById('qrcode');
+            qrcodeDiv.innerHTML = '';
             document.getElementById('qr-info').style.display = 'none';
             document.getElementById('download-btn').disabled = true;
             document.getElementById('copy-btn').disabled = true;
-            clearMessage();
-            
             currentQRData = null;
-            currentQRCode = null;
+            currentCanvas = null;
         }
         
         function showSuccess(message) {
             const messageDiv = document.getElementById('message');
             messageDiv.className = 'message success';
             messageDiv.textContent = message;
+            setTimeout(() => {
+                if (messageDiv.textContent === message) clearMessage();
+            }, 3000);
         }
         
         function showError(message) {
             const messageDiv = document.getElementById('message');
             messageDiv.className = 'message error';
             messageDiv.textContent = '✗ ' + message;
+            setTimeout(() => {
+                if (messageDiv.textContent === '✗ ' + message) clearMessage();
+            }, 3000);
         }
         
         function clearMessage() {
-            document.getElementById('message').innerHTML = '';
+            const messageDiv = document.getElementById('message');
+            messageDiv.innerHTML = '';
+            messageDiv.className = '';
         }
         
-        // Set default values for location
+        // Set giá trị mặc định cho vị trí
         window.addEventListener('DOMContentLoaded', function() {
             document.getElementById('location-lat').value = '21.0285';
             document.getElementById('location-lng').value = '105.8542';
