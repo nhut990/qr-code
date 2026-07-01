@@ -123,6 +123,7 @@
             border-radius: 8px;
             font-size: 1em;
             transition: border-color 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
         .form-group input:focus,
@@ -204,6 +205,34 @@
             background: #da190b;
         }
         
+        .location-method {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .location-method label {
+            display: flex;
+            align-items: center;
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+        
+        .location-method input[type="radio"] {
+            width: auto;
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        
+        .location-input-group {
+            display: none;
+        }
+        
+        .location-input-group.active {
+            display: block;
+        }
+        
         .qr-display {
             text-align: center;
         }
@@ -262,6 +291,15 @@
             background: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            color: #1565c0;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
         }
         
         .footer {
@@ -368,7 +406,7 @@
                         <input type="text" id="contact-company" placeholder="Tên công ty">
                     </div>
                     <div class="form-group">
-                        <label>Địa Chỉ</label>  <!-- Đã sửa lỗi font -->
+                        <label>Địa Chỉ</label>
                         <input type="text" id="contact-address" placeholder="Địa chỉ">
                     </div>
                 </div>
@@ -411,17 +449,44 @@
                 
                 <!-- Location Tab -->
                 <div id="location" class="form-content">
-                    <div class="form-group">
-                        <label>Vĩ Độ (Latitude)</label>
-                        <input type="number" id="location-lat" placeholder="21.0285" step="0.0001">
+                    <div class="location-method">
+                        <label>
+                            <input type="radio" name="location-method" value="coordinates" checked> Tọa độ
+                        </label>
+                        <label>
+                            <input type="radio" name="location-method" value="google-maps"> Google Maps Link
+                        </label>
                     </div>
-                    <div class="form-group">
-                        <label>Kinh Độ (Longitude)</label>
-                        <input type="number" id="location-lng" placeholder="105.8542" step="0.0001">
+                    
+                    <!-- Coordinates Input -->
+                    <div id="coordinates-input" class="location-input-group active">
+                        <div class="form-group">
+                            <label>Vĩ Độ (Latitude)</label>
+                            <input type="number" id="location-lat" placeholder="21.0285" step="0.0001">
+                        </div>
+                        <div class="form-group">
+                            <label>Kinh Độ (Longitude)</label>
+                            <input type="number" id="location-lng" placeholder="105.8542" step="0.0001">
+                        </div>
+                        <div class="form-group">
+                            <label>Tên Địa Điểm (Tùy chọn)</label>
+                            <input type="text" id="location-name" placeholder="Tên địa điểm">
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label>Tên Địa Điểm (Tùy chọn)</label>
-                        <input type="text" id="location-name" placeholder="Tên địa điểm">
+                    
+                    <!-- Google Maps Link Input -->
+                    <div id="googlemaps-input" class="location-input-group">
+                        <div class="form-group">
+                            <label>Google Maps / Apple Maps Link</label>
+                            <textarea id="location-maps-link" placeholder="Dán đường link từ Google Maps hoặc Apple Maps&#10;Ví dụ: https://maps.app.goo.gl/...&#10;hoặc: https://maps.apple.com/?..."></textarea>
+                        </div>
+                        <div class="info-box">
+                            📌 <strong>Hướng dẫn:</strong><br>
+                            1. Mở Google Maps hoặc Apple Maps<br>
+                            2. Tìm địa điểm cần mã hóa<br>
+                            3. Nhấn "Chia sẻ" → Sao chép link<br>
+                            4. Dán link vào ô bên trên
+                        </div>
                     </div>
                 </div>
                 
@@ -457,10 +522,10 @@
     
     <script>
         let currentQRData = null;
-        let currentCanvas = null;   // Lưu canvas hiện tại để tải ảnh
+        let currentCanvas = null;
         let currentTab = 'url';
         
-        // Xử lý chuyển tab (sửa lỗi event)
+        // Xử lý chuyển tab
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 const tab = this.getAttribute('data-tab');
@@ -468,25 +533,98 @@
             });
         });
         
+        // Xử lý chuyển phương pháp nhập vị trí
+        document.querySelectorAll('input[name="location-method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const coordinatesInput = document.getElementById('coordinates-input');
+                const googlemapsInput = document.getElementById('googlemaps-input');
+                
+                if (this.value === 'coordinates') {
+                    coordinatesInput.classList.add('active');
+                    googlemapsInput.classList.remove('active');
+                } else {
+                    coordinatesInput.classList.remove('active');
+                    googlemapsInput.classList.add('active');
+                }
+            });
+        });
+        
         function switchTab(tab) {
-            // Ẩn tất cả form content
             document.querySelectorAll('.form-content').forEach(el => {
                 el.classList.remove('active');
             });
-            // Xóa active class khỏi tất cả nút
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('active');
             });
-            // Hiện tab được chọn
             document.getElementById(tab).classList.add('active');
-            // Active nút tương ứng
             document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
             
             currentTab = tab;
-            
-            // Xóa QR cũ khi chuyển tab (tránh nhầm lẫn)
             clearQRDisplay();
             clearMessage();
+        }
+        
+        // Hàm escape dữ liệu WiFi
+        function escapeWiFiString(str) {
+            return str.replace(/[;:,\\]/g, '\\$&');
+        }
+        
+        // Hàm escape dữ liệu vCard
+        function escapeVCard(str) {
+            return str.replace(/[;,\n]/g, '\\$&');
+        }
+        
+        // Validate URL
+        function isValidURL(url) {
+            try {
+                new URL(url);
+                return true;
+            } catch {
+                return false;
+            }
+        }
+        
+        // Validate Email
+        function isValidEmail(email) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return emailRegex.test(email);
+        }
+        
+        // Lấy tọa độ từ Google Maps link
+        function extractCoordinatesFromMapLink(link) {
+            try {
+                // Google Maps format: https://maps.app.goo.gl/...
+                // hoặc https://www.google.com/maps/place/.../@lat,lng
+                // hoặc https://maps.google.com/?q=lat,lng
+                
+                // Thử lấy từ URL có chứa @lat,lng
+                const atMatch = link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+                if (atMatch) {
+                    return {
+                        lat: atMatch[1],
+                        lng: atMatch[2]
+                    };
+                }
+                
+                // Thử lấy từ query param
+                const qMatch = link.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
+                if (qMatch) {
+                    return {
+                        lat: qMatch[1],
+                        lng: qMatch[2]
+                    };
+                }
+                
+                // Nếu là Google Maps short link, không thể extract, trả lại link gốc
+                if (link.includes('maps.app.goo.gl') || link.includes('maps.google.com')) {
+                    return null;
+                }
+                
+                return null;
+            } catch (err) {
+                console.error('Error extracting coordinates:', err);
+                return null;
+            }
         }
         
         // Hàm tạo nội dung QR dựa trên tab hiện tại
@@ -498,6 +636,10 @@
                     const url = document.getElementById('url-input').value.trim();
                     if (!url) {
                         showError('Vui lòng nhập URL');
+                        return null;
+                    }
+                    if (!isValidURL(url)) {
+                        showError('URL không hợp lệ. Vui lòng nhập URL đúng định dạng');
                         return null;
                     }
                     return url;
@@ -520,9 +662,13 @@
                         return null;
                     }
                     
-                    let wifiString = `WIFI:T:${security};S:${ssid};`;
-                    if (password && security !== 'nopass') {
-                        wifiString += `P:${password};`;
+                    // Escape ký tự đặc biệt
+                    const escapedSsid = escapeWiFiString(ssid);
+                    const escapedPass = password ? escapeWiFiString(password) : '';
+                    
+                    let wifiString = `WIFI:T:${security};S:${escapedSsid};`;
+                    if (escapedPass && security !== 'nopass') {
+                        wifiString += `P:${escapedPass};`;
                     }
                     wifiString += ';';
                     return wifiString;
@@ -540,11 +686,11 @@
                     }
                     
                     let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
-                    vcard += `FN:${name}\n`;
+                    vcard += `FN:${escapeVCard(name)}\n`;
                     if (phone) vcard += `TEL:${phone}\n`;
                     if (email) vcard += `EMAIL:${email}\n`;
-                    if (company) vcard += `ORG:${company}\n`;
-                    if (address) vcard += `ADR:;;${address}\n`;
+                    if (company) vcard += `ORG:${escapeVCard(company)}\n`;
+                    if (address) vcard += `ADR:;;${escapeVCard(address)}\n`;
                     vcard += 'END:VCARD';
                     return vcard;
                 
@@ -555,6 +701,11 @@
                     
                     if (!emailAddr) {
                         showError('Vui lòng nhập email');
+                        return null;
+                    }
+                    
+                    if (!isValidEmail(emailAddr)) {
+                        showError('Email không hợp lệ');
                         return null;
                     }
                     
@@ -582,30 +733,66 @@
                         return null;
                     }
                     
+                    // Sửa format SMS: smsto:number?body=message
                     let smsString = `smsto:${smsPhone}`;
-                    if (smsMsg) smsString += `:${encodeURIComponent(smsMsg)}`;
+                    if (smsMsg) smsString += `?body=${encodeURIComponent(smsMsg)}`;
                     return smsString;
                 
                 case 'location':
-                    const lat = document.getElementById('location-lat').value.trim();
-                    const lng = document.getElementById('location-lng').value.trim();
+                    const locationMethod = document.querySelector('input[name="location-method"]:checked').value;
                     
-                    if (!lat || !lng) {
-                        showError('Vui lòng nhập vĩ độ và kinh độ');
-                        return null;
+                    if (locationMethod === 'coordinates') {
+                        const lat = document.getElementById('location-lat').value.trim();
+                        const lng = document.getElementById('location-lng').value.trim();
+                        
+                        if (!lat || !lng) {
+                            showError('Vui lòng nhập vĩ độ và kinh độ');
+                            return null;
+                        }
+                        
+                        // Validate tọa độ
+                        const latNum = parseFloat(lat);
+                        const lngNum = parseFloat(lng);
+                        if (isNaN(latNum) || isNaN(lngNum) || latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
+                            showError('Vĩ độ (-90 đến 90) và kinh độ (-180 đến 180) không hợp lệ');
+                            return null;
+                        }
+                        
+                        let locationString = `geo:${lat},${lng}`;
+                        const locName = document.getElementById('location-name').value.trim();
+                        if (locName) locationString += `?q=${encodeURIComponent(locName)}`;
+                        return locationString;
+                    } else {
+                        // Google Maps link method
+                        const mapsLink = document.getElementById('location-maps-link').value.trim();
+                        if (!mapsLink) {
+                            showError('Vui lòng dán link từ Google Maps hoặc Apple Maps');
+                            return null;
+                        }
+                        
+                        // Kiểm tra xem link có hợp lệ không
+                        if (!isValidURL(mapsLink) && !mapsLink.includes('maps')) {
+                            showError('Link không hợp lệ. Vui lòng kiểm tra lại');
+                            return null;
+                        }
+                        
+                        // Thử extract tọa độ nếu có thể
+                        const coords = extractCoordinatesFromMapLink(mapsLink);
+                        if (coords) {
+                            // Nếu extract được tọa độ, dùng geo format
+                            return `geo:${coords.lat},${coords.lng}`;
+                        } else {
+                            // Nếu không extract được, dùng link gốc
+                            return mapsLink;
+                        }
                     }
-                    
-                    let locationString = `geo:${lat},${lng}`;
-                    const locName = document.getElementById('location-name').value.trim();
-                    if (locName) locationString += `?q=${encodeURIComponent(locName)}`;
-                    return locationString;
                 
                 default:
                     return null;
             }
         }
         
-        // Tạo QR code sử dụng thư viện QRCode mới (hỗ trợ tiếng Việt)
+        // Tạo QR code
         async function generateQR() {
             clearMessage();
             const data = generateQRData();
@@ -613,18 +800,15 @@
             
             currentQRData = data;
             
-            // Xóa nội dung cũ
             const qrcodeDiv = document.getElementById('qrcode');
             qrcodeDiv.innerHTML = '';
             
-            // Tạo canvas mới
             const canvas = document.createElement('canvas');
             canvas.width = 250;
             canvas.height = 250;
             qrcodeDiv.appendChild(canvas);
             
             try {
-                // Dùng thư viện qrcode để vẽ lên canvas
                 await QRCode.toCanvas(canvas, data, {
                     width: 250,
                     margin: 2,
@@ -637,11 +821,9 @@
                 
                 currentCanvas = canvas;
                 
-                // Hiển thị thông tin
                 document.getElementById('qr-info').style.display = 'block';
                 document.getElementById('qr-content').textContent = data;
                 
-                // Kích hoạt nút
                 document.getElementById('download-btn').disabled = false;
                 document.getElementById('copy-btn').disabled = false;
                 
@@ -677,21 +859,19 @@
         
         // Xóa dữ liệu chỉ trong tab hiện tại
         function clearCurrentTab() {
-            // Lấy tất cả input, textarea trong tab đang active
             const activeTab = document.getElementById(currentTab);
             const inputs = activeTab.querySelectorAll('input, textarea');
             inputs.forEach(input => {
-                if (input.type !== 'button' && input.type !== 'submit') {
+                if (input.type !== 'button' && input.type !== 'submit' && input.type !== 'radio') {
                     input.value = '';
                 }
             });
             
-            // Xóa QR hiển thị
             clearQRDisplay();
             clearMessage();
         }
         
-        // Xóa QR và reset trạng thái nút
+        // Xóa QR
         function clearQRDisplay() {
             const qrcodeDiv = document.getElementById('qrcode');
             qrcodeDiv.innerHTML = '';
