@@ -15,20 +15,25 @@
             box-sizing: border-box;
         }
         
+        html, body {
+            height: 100%;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
-            padding-bottom: 100px; /* đủ khoảng trống cho footer cố định */
             display: flex;
             flex-direction: column;
+            padding-bottom: 140px; /* Tăng lên để footer không chồng */
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
             flex: 1;
+            width: 100%;
         }
 
         .header {
@@ -71,6 +76,7 @@
             grid-template-columns: 1fr 1fr;
             gap: 30px;
             align-items: start;
+            margin-bottom: 40px;
         }
         
         .card {
@@ -330,28 +336,36 @@
             left: 0;
             right: 0;
             bottom: 0;
+            width: 100%;
             text-align: center;
-            padding: 10px 0;
+            padding: 15px 20px;
             color: rgba(255,255,255,0.95);
             font-size: 0.95em;
-            pointer-events: none; /* không che chắn click nội dung */
+            pointer-events: none;
             text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-top: 1px solid rgba(255,255,255,0.2);
+            z-index: 100;
         }
 
         @media (max-width: 900px) {
             .content {
                 grid-template-columns: 1fr;
+                margin-bottom: 30px;
             }
             .header h1 { font-size: 1.6em; }
             .tab-buttons { grid-template-columns: 1fr; }
             .button-group { grid-template-columns: 1fr; }
+            body {
+                padding-bottom: 150px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 Tạo & Đọc Mã QR Đa Chức Năng</h1>
+            <h1>��� Tạo & Đọc Mã QR Đa Chức Năng</h1>
             <p style="opacity:0.95; color:#fff;">Tạo mã QR (Wifi, vCard, URL...) hoặc đọc mã QR từ ảnh upload</p>
         </div>
 
