@@ -172,6 +172,11 @@
             transition: all 0.2s ease;
             font-size: 1em;
         }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
         
         .btn-generate {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -218,8 +223,15 @@
             align-items: center;
             min-height: 220px;
             background: white;
+            border: 2px dashed #e0e0e0;
             border-radius: 10px;
             margin-bottom: 12px;
+        }
+
+        #qrcode:empty::before {
+            content: "Mã QR sẽ hiển thị ở đây";
+            color: #aaa;
+            font-size: 0.95em;
         }
         
         #qrcode canvas {
@@ -240,6 +252,12 @@
         .qr-info h3 {
             color: #667eea;
             margin-bottom: 6px;
+        }
+
+        .qr-info p {
+            word-break: break-all;
+            font-size: 0.9em;
+            color: #333;
         }
         
         .message {
@@ -346,6 +364,8 @@
             <!-- Generate Section -->
             <div class="card form-section generate-section" aria-hidden="false">
                 <h2>Chọn Loại Mã QR</h2>
+
+                <div id="message" aria-live="polite"></div>
                 
                 <div class="tab-buttons" role="tablist" aria-label="Các loại QR">
                     <button class="tab-btn active" data-tab="url">🌐 Website</button>
@@ -503,6 +523,19 @@
                     <button class="btn btn-generate" onclick="generateQR()">Tạo Mã QR</button>
                     <button class="btn btn-clear" onclick="clearCurrentTab()">Xóa Tab Hiện Tại</button>
                 </div>
+
+                <!-- Khu vực hiển thị kết quả QR (đã bổ sung) -->
+                <div class="qr-display" style="margin-top: 20px;">
+                    <div id="qrcode"></div>
+                    <div class="qr-info" id="qr-info" style="display:none;">
+                        <h3>Nội dung đã mã hóa:</h3>
+                        <p id="qr-content"></p>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-download" id="download-btn" onclick="downloadQR()" disabled>⬇️ Tải xuống</button>
+                        <button class="btn btn-copy" id="copy-btn" onclick="copyToClipboard()" disabled>📋 Sao chép</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Read Section -->
@@ -607,6 +640,18 @@
             clearMessage();
         }
 
+        // --- Location method switching (bổ sung, đã thiếu ở bản gốc) ---
+        document.querySelectorAll('input[name="location-method"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.querySelectorAll('.location-input-group').forEach(el => el.classList.remove('active'));
+                if (this.value === 'coordinates') {
+                    document.getElementById('coordinates-input').classList.add('active');
+                } else {
+                    document.getElementById('googlemaps-input').classList.add('active');
+                }
+            });
+        });
+
         // --- Utility / Escapes / Validation ---
         function escapeWiFiString(str) {
             return str.replace(/[;:,\\]/g, '\\$&');
@@ -652,7 +697,7 @@
             }
         }
 
-        // --- Generate QR logic (unchanged mostly) ---
+        // --- Generate QR logic ---
         function generateQRData() {
             const tab = currentTab;
             
@@ -759,22 +804,22 @@
             clearMessage();
             const data = generateQRData();
             if (!data) return;
-            
-            currentQRData = data;
-            const qrcodeDiv = document.getElementById('qrcode');
-            qrcodeDiv.innerHTML = '';
-            
-            // Use devicePixelRatio to render sharper on high-DPI screens
-            const size = 300;
-            const ratio = window.devicePixelRatio || 1;
-            const canvas = document.createElement('canvas');
-            canvas.width = size * ratio;
-            canvas.height = size * ratio;
-            canvas.style.width = size + 'px';
-            canvas.style.height = size + 'px';
-            qrcodeDiv.appendChild(canvas);
-            
+
             try {
+                currentQRData = data;
+                const qrcodeDiv = document.getElementById('qrcode');
+                qrcodeDiv.innerHTML = '';
+                
+                // Use devicePixelRatio to render sharper on high-DPI screens
+                const size = 300;
+                const ratio = window.devicePixelRatio || 1;
+                const canvas = document.createElement('canvas');
+                canvas.width = size * ratio;
+                canvas.height = size * ratio;
+                canvas.style.width = size + 'px';
+                canvas.style.height = size + 'px';
+                qrcodeDiv.appendChild(canvas);
+
                 await QRCode.toCanvas(canvas, data, {
                     width: size * ratio,
                     margin: 2 * ratio,
@@ -782,7 +827,6 @@
                     errorCorrectionLevel: 'H'
                 });
                 
-                // if canvas was scaled for DPR, draw a CSS-scaled element already handled
                 currentCanvas = canvas;
                 
                 document.getElementById('qr-info').style.display = 'block';
@@ -839,7 +883,8 @@
         function clearQRDisplay() {
             const qrcodeDiv = document.getElementById('qrcode');
             if (qrcodeDiv) qrcodeDiv.innerHTML = '';
-            if (document.getElementById('qr-info')) document.getElementById('qr-info').style.display = 'none';
+            const qrInfo = document.getElementById('qr-info');
+            if (qrInfo) qrInfo.style.display = 'none';
             const db = document.getElementById('download-btn'); if (db) db.disabled = true;
             const cb = document.getElementById('copy-btn'); if (cb) cb.disabled = true;
             currentQRData = null;
@@ -870,12 +915,7 @@
         }
 
         function currentMainMessageDiv() {
-            if (mainTab === 'generate') return document.getElementById('message') || createTempMessageDiv();
-            else return document.getElementById('read-message') || createTempMessageDiv();
-        }
-
-        function createTempMessageDiv() {
-            const d = document.createElement('div'); document.body.prepend(d); return d;
+            return mainTab === 'generate' ? document.getElementById('message') : document.getElementById('read-message');
         }
 
         function clearMessagesAll() {
@@ -1088,18 +1128,10 @@
             return 'Plain text';
         }
 
-        // --- Read helpers ---
-        function showReadErrorAndLog(msg) {
-            console.error(msg);
-            showReadError(msg);
-        }
-
         // init defaults
         window.addEventListener('DOMContentLoaded', function() {
             document.getElementById('location-lat').value = '21.0285';
             document.getElementById('location-lng').value = '105.8542';
-            // wire quick message element for generate side
-            const genMessage = document.createElement('div'); genMessage.id = 'message'; document.querySelector('.generate-section').insertBefore(genMessage, document.querySelector('.generate-section').firstChild);
         });
     </script>
 </body>
