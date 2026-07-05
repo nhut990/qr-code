@@ -3,9 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tạo Mã QR - Nhiều Chức Năng</title>
-    <!-- Thư viện QRCode mới, hỗ trợ tiếng Việt -->
+    <title>Tạo & Đọc Mã QR - Nhiều Chức Năng</title>
+    <!-- Thư viện QRCode để tạo mã -->
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <!-- Thư viện jsQR để giải mã QR từ ảnh -->
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     <style>
         * {
             margin: 0;
@@ -18,31 +20,50 @@
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             padding: 20px;
+            padding-bottom: 100px; /* đủ khoảng trống cho footer cố định */
             display: flex;
             flex-direction: column;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             flex: 1;
         }
-        
+
         .header {
             text-align: center;
             color: white;
-            margin-bottom: 40px;
+            margin-bottom: 20px;
         }
-        
+
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-size: 2.2em;
+            margin-bottom: 6px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.25);
         }
-        
-        .header p {
-            font-size: 1.1em;
-            opacity: 0.9;
+
+        .main-tabs {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .main-tab-btn {
+            padding: 10px 16px;
+            border-radius: 10px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.08);
+            color: white;
+            cursor: pointer;
+            font-weight: 700;
+        }
+
+        .main-tab-btn.active {
+            background: white;
+            color: #667eea;
+            border-color: #667eea;
         }
         
         .content {
@@ -55,43 +76,38 @@
         .card {
             background: white;
             border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.18);
         }
         
         .form-section h2 {
             color: #667eea;
-            margin-bottom: 20px;
-            font-size: 1.5em;
+            margin-bottom: 12px;
+            font-size: 1.4em;
         }
         
         .tab-buttons {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
         
         .tab-btn {
-            padding: 12px 15px;
+            padding: 10px 12px;
             border: 2px solid #667eea;
             background: white;
             color: #667eea;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             font-size: 0.9em;
         }
         
         .tab-btn.active {
             background: #667eea;
             color: white;
-        }
-        
-        .tab-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
         }
         
         .form-content {
@@ -103,12 +119,12 @@
         }
         
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
         
         .form-group label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             color: #333;
             font-weight: 600;
             font-size: 0.95em;
@@ -118,11 +134,11 @@
         .form-group textarea,
         .form-group select {
             width: 100%;
-            padding: 12px;
+            padding: 10px;
             border: 2px solid #e0e0e0;
             border-radius: 8px;
             font-size: 1em;
-            transition: border-color 0.3s ease;
+            transition: border-color 0.2s ease;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
@@ -131,34 +147,29 @@
         .form-group select:focus {
             outline: none;
             border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-        
-        .form-group textarea {
-            resize: vertical;
-            min-height: 80px;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.07);
         }
         
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 15px;
+            gap: 10px;
         }
         
         .button-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 10px;
-            margin-top: 20px;
+            margin-top: 12px;
         }
         
         .btn {
-            padding: 12px 24px;
+            padding: 10px 16px;
             border: none;
             border-radius: 8px;
-            font-weight: 600;
+            font-weight: 700;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             font-size: 1em;
         }
         
@@ -168,23 +179,9 @@
             grid-column: span 2;
         }
         
-        .btn-generate:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
-        }
-        
         .btn-download {
             background: #4CAF50;
             color: white;
-        }
-        
-        .btn-download:hover {
-            background: #45a049;
-        }
-        
-        .btn-download:disabled {
-            background: #ccc;
-            cursor: not-allowed;
         }
         
         .btn-copy {
@@ -192,37 +189,15 @@
             color: white;
         }
         
-        .btn-copy:hover {
-            background: #0b7dda;
-        }
-        
         .btn-clear {
             background: #f44336;
             color: white;
         }
         
-        .btn-clear:hover {
-            background: #da190b;
-        }
-        
         .location-method {
             display: flex;
             gap: 10px;
-            margin-bottom: 15px;
-        }
-        
-        .location-method label {
-            display: flex;
-            align-items: center;
-            margin: 0;
-            font-weight: normal;
-            cursor: pointer;
-        }
-        
-        .location-method input[type="radio"] {
-            width: auto;
-            margin-right: 8px;
-            cursor: pointer;
+            margin-bottom: 10px;
         }
         
         .location-input-group {
@@ -241,10 +216,10 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 250px;
+            min-height: 220px;
             background: white;
             border-radius: 10px;
-            margin-bottom: 20px;
+            margin-bottom: 12px;
         }
         
         #qrcode canvas {
@@ -256,27 +231,21 @@
         
         .qr-info {
             background: #f5f5f5;
-            padding: 15px;
+            padding: 12px;
             border-radius: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             text-align: left;
         }
         
         .qr-info h3 {
             color: #667eea;
-            margin-bottom: 10px;
-        }
-        
-        .qr-info p {
-            color: #555;
-            word-break: break-all;
-            font-size: 0.9em;
+            margin-bottom: 6px;
         }
         
         .message {
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             text-align: center;
             font-weight: 600;
         }
@@ -298,47 +267,87 @@
             color: #1565c0;
             padding: 10px;
             border-radius: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-size: 0.9em;
         }
-        
-        .footer {
+
+        /* Read card styles */
+        .drop-area {
+            border: 2px dashed #cfd8dc;
+            border-radius: 8px;
+            padding: 14px;
             text-align: center;
-            color: white;
-            padding: 20px;
-            margin-top: 40px;
-            font-size: 0.9em;
-            opacity: 0.8;
+            background: #fafafa;
+            color: #333;
+            margin-bottom: 12px;
         }
-        
-        @media (max-width: 768px) {
+
+        .drop-area.dragover {
+            border-color: #667eea;
+            background: #eef3ff;
+        }
+
+        #preview-img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        #scan-canvas {
+            display: none;
+        }
+
+        .result-box {
+            background: #fff7e6;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ffe7a3;
+            margin-bottom: 10px;
+            word-break: break-all;
+        }
+
+        /* Footer fixed and centered */
+        .site-footer {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            text-align: center;
+            padding: 10px 0;
+            color: rgba(255,255,255,0.95);
+            font-size: 0.95em;
+            pointer-events: none; /* không che chắn click nội dung */
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+
+        @media (max-width: 900px) {
             .content {
                 grid-template-columns: 1fr;
             }
-            
-            .header h1 {
-                font-size: 1.8em;
-            }
-            
-            .tab-buttons {
-                grid-template-columns: 1fr;
-            }
+            .header h1 { font-size: 1.6em; }
+            .tab-buttons { grid-template-columns: 1fr; }
+            .button-group { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 Tạo Mã QR Đa Chức Năng</h1>
-            <p>Tạo mã QR cho Wifi, Danh bạ, Văn bản, Website và nhiều hơn nữa</p>
+            <h1>🎯 Tạo & Đọc Mã QR Đa Chức Năng</h1>
+            <p style="opacity:0.95; color:#fff;">Tạo mã QR (Wifi, vCard, URL...) hoặc đọc mã QR từ ảnh upload</p>
+        </div>
+
+        <div class="main-tabs" role="tablist" aria-label="Chức năng chính">
+            <button class="main-tab-btn active" data-main-tab="generate" role="tab" aria-selected="true">🛠️ Tạo</button>
+            <button class="main-tab-btn" data-main-tab="read" role="tab" aria-selected="false">🔍 Đọc từ ảnh</button>
         </div>
         
         <div class="content">
-            <!-- Form Section -->
-            <div class="card form-section">
+            <!-- Generate Section -->
+            <div class="card form-section generate-section" aria-hidden="false">
                 <h2>Chọn Loại Mã QR</h2>
                 
-                <div class="tab-buttons">
+                <div class="tab-buttons" role="tablist" aria-label="Các loại QR">
                     <button class="tab-btn active" data-tab="url">🌐 Website</button>
                     <button class="tab-btn" data-tab="text">📝 Văn Bản</button>
                     <button class="tab-btn" data-tab="wifi">📶 Wifi</button>
@@ -352,7 +361,7 @@
                 <!-- URL Tab -->
                 <div id="url" class="form-content active">
                     <div class="form-group">
-                        <label>URL Website</label>
+                        <label for="url-input">URL Website</label>
                         <input type="url" id="url-input" placeholder="https://example.com" value="">
                     </div>
                 </div>
@@ -360,7 +369,7 @@
                 <!-- Text Tab -->
                 <div id="text" class="form-content">
                     <div class="form-group">
-                        <label>Nội Dung Văn Bản</label>
+                        <label for="text-input">Nội Dung Văn Bản</label>
                         <textarea id="text-input" placeholder="Nhập văn bản cần mã hóa..."></textarea>
                     </div>
                 </div>
@@ -368,15 +377,15 @@
                 <!-- WiFi Tab -->
                 <div id="wifi" class="form-content">
                     <div class="form-group">
-                        <label>Tên Mạng (SSID)</label>
+                        <label for="wifi-ssid">Tên Mạng (SSID)</label>
                         <input type="text" id="wifi-ssid" placeholder="Tên wifi của bạn">
                     </div>
                     <div class="form-group">
-                        <label>Mật Khẩu</label>
+                        <label for="wifi-password">Mật Khẩu</label>
                         <input type="password" id="wifi-password" placeholder="Mật khẩu wifi">
                     </div>
                     <div class="form-group">
-                        <label>Loại Bảo Mật</label>
+                        <label for="wifi-security">Loại Bảo Mật</label>
                         <select id="wifi-security">
                             <option value="WPA">WPA/WPA2</option>
                             <option value="WEP">WEP</option>
@@ -388,25 +397,25 @@
                 <!-- Contact Tab -->
                 <div id="contact" class="form-content">
                     <div class="form-group">
-                        <label>Họ và Tên</label>
+                        <label for="contact-name">Họ và Tên</label>
                         <input type="text" id="contact-name" placeholder="Tên đầy đủ">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label>Điện Thoại</label>
+                            <label for="contact-phone">Điện Thoại</label>
                             <input type="tel" id="contact-phone" placeholder="Số điện thoại">
                         </div>
                         <div class="form-group">
-                            <label>Email</label>
+                            <label for="contact-email">Email</label>
                             <input type="email" id="contact-email" placeholder="Email">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label>Công Ty</label>
+                        <label for="contact-company">Công Ty</label>
                         <input type="text" id="contact-company" placeholder="Tên công ty">
                     </div>
                     <div class="form-group">
-                        <label>Địa Chỉ</label>
+                        <label for="contact-address">Địa Chỉ</label>
                         <input type="text" id="contact-address" placeholder="Địa chỉ">
                     </div>
                 </div>
@@ -414,15 +423,15 @@
                 <!-- Email Tab -->
                 <div id="email" class="form-content">
                     <div class="form-group">
-                        <label>Email</label>
+                        <label for="email-input">Email</label>
                         <input type="email" id="email-input" placeholder="example@email.com">
                     </div>
                     <div class="form-group">
-                        <label>Chủ Đề</label>
+                        <label for="email-subject">Chủ Đề</label>
                         <input type="text" id="email-subject" placeholder="Chủ đề email">
                     </div>
                     <div class="form-group">
-                        <label>Nội Dung</label>
+                        <label for="email-body">Nội Dung</label>
                         <textarea id="email-body" placeholder="Nội dung email"></textarea>
                     </div>
                 </div>
@@ -430,7 +439,7 @@
                 <!-- Phone Tab -->
                 <div id="phone" class="form-content">
                     <div class="form-group">
-                        <label>Số Điện Thoại</label>
+                        <label for="phone-input">Số Điện Thoại</label>
                         <input type="tel" id="phone-input" placeholder="Số điện thoại">
                     </div>
                 </div>
@@ -438,11 +447,11 @@
                 <!-- SMS Tab -->
                 <div id="sms" class="form-content">
                     <div class="form-group">
-                        <label>Số Điện Thoại</label>
+                        <label for="sms-phone">Số Điện Thoại</label>
                         <input type="tel" id="sms-phone" placeholder="Số điện thoại">
                     </div>
                     <div class="form-group">
-                        <label>Nội Dung Tin Nhắn</label>
+                        <label for="sms-message">Nội Dung Tin Nhắn</label>
                         <textarea id="sms-message" placeholder="Nội dung tin nhắn"></textarea>
                     </div>
                 </div>
@@ -461,15 +470,15 @@
                     <!-- Coordinates Input -->
                     <div id="coordinates-input" class="location-input-group active">
                         <div class="form-group">
-                            <label>Vĩ Độ (Latitude)</label>
+                            <label for="location-lat">Vĩ Độ (Latitude)</label>
                             <input type="number" id="location-lat" placeholder="21.0285" step="0.0001">
                         </div>
                         <div class="form-group">
-                            <label>Kinh Độ (Longitude)</label>
+                            <label for="location-lng">Kinh Độ (Longitude)</label>
                             <input type="number" id="location-lng" placeholder="105.8542" step="0.0001">
                         </div>
                         <div class="form-group">
-                            <label>Tên Địa Điểm (Tùy chọn)</label>
+                            <label for="location-name">Tên Địa Điểm (Tùy chọn)</label>
                             <input type="text" id="location-name" placeholder="Tên địa điểm">
                         </div>
                     </div>
@@ -477,8 +486,8 @@
                     <!-- Google Maps Link Input -->
                     <div id="googlemaps-input" class="location-input-group">
                         <div class="form-group">
-                            <label>Google Maps / Apple Maps Link</label>
-                            <textarea id="location-maps-link" placeholder="Dán đường link từ Google Maps hoặc Apple Maps&#10;Ví dụ: https://maps.app.goo.gl/...&#10;hoặc: https://maps.apple.com/?..."></textarea>
+                            <label for="location-maps-link">Google Maps / Apple Maps Link</label>
+                            <textarea id="location-maps-link" placeholder="Dán đường link từ Google Maps hoặc Apple Maps&#10;Ví dụ: https://maps.app.goo.gl/..."></textarea>
                         </div>
                         <div class="info-box">
                             📌 <strong>Hướng dẫn:</strong><br>
@@ -495,60 +504,92 @@
                     <button class="btn btn-clear" onclick="clearCurrentTab()">Xóa Tab Hiện Tại</button>
                 </div>
             </div>
-            
-            <!-- QR Display Section -->
-            <div class="card qr-display">
-                <h2 style="margin-bottom: 20px; color: #667eea;">Mã QR Của Bạn</h2>
-                
-                <div id="message"></div>
-                <div id="qrcode"></div>
-                
-                <div id="qr-info" class="qr-info" style="display: none;">
-                    <h3>Nội Dung Mã QR:</h3>
-                    <p id="qr-content"></p>
+
+            <!-- Read Section -->
+            <div class="card qr-display read-section" aria-hidden="true" style="display:none;">
+                <h2 style="margin-bottom: 12px; color: #667eea;">🔍 Đọc Mã QR từ ảnh</h2>
+
+                <div id="read-message" aria-live="polite"></div>
+
+                <div id="drop-area" class="drop-area" tabindex="0">
+                    <p>Thả ảnh vào đây hoặc nhấp để chọn file (PNG/JPEG/GIF)</p>
+                    <input type="file" id="file-input" accept="image/*" style="display:none">
+                    <button class="btn" id="choose-file-btn" style="margin-top:8px; background:#667eea;color:white;">Chọn Ảnh</button>
                 </div>
-                
-                <div class="button-group">
-                    <button class="btn btn-download" id="download-btn" onclick="downloadQR()" disabled>📥 Tải Xuống</button>
-                    <button class="btn btn-copy" id="copy-btn" onclick="copyToClipboard()" disabled>📋 Sao Chép</button>
+
+                <img id="preview-img" alt="Preview ảnh" style="display:none" />
+
+                <canvas id="scan-canvas"></canvas>
+
+                <div id="scan-result" style="display:none;">
+                    <div class="qr-info">
+                        <h3>Kết quả giải mã</h3>
+                        <p id="decoded-type" style="font-weight:700; color:#333;"></p>
+                        <div class="result-box" id="decoded-content"></div>
+                    </div>
+                    <div class="button-group">
+                        <button class="btn btn-copy" id="copy-result-btn">📋 Sao chép</button>
+                        <button class="btn btn-download" id="open-result-btn">🔗 Mở / Đi tới</button>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
     
-    <div class="footer">
-        <p>Created by Minh Nhựt<br>© 2026</p>
+    <!-- Footer fixed, centered at bottom -->
+    <div class="site-footer" aria-hidden="false">
+        Created by Minh Nhựt • © 2026
     </div>
     
     <script>
+        // --- State ---
         let currentQRData = null;
         let currentCanvas = null;
         let currentTab = 'url';
-        
-        // Xử lý chuyển tab
+        // main tab (generate/read)
+        let mainTab = 'generate';
+
+        // --- Main tab switching ---
+        document.querySelectorAll('.main-tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const tab = this.getAttribute('data-main-tab');
+                switchMainTab(tab);
+            });
+        });
+
+        function switchMainTab(tab) {
+            document.querySelectorAll('.main-tab-btn').forEach(el => {
+                el.classList.remove('active');
+                el.setAttribute('aria-selected', 'false');
+            });
+            const btn = document.querySelector(`.main-tab-btn[data-main-tab="${tab}"]`);
+            btn.classList.add('active');
+            btn.setAttribute('aria-selected', 'true');
+
+            if (tab === 'generate') {
+                document.querySelector('.generate-section').style.display = '';
+                document.querySelector('.generate-section').setAttribute('aria-hidden','false');
+                document.querySelector('.read-section').style.display = 'none';
+                document.querySelector('.read-section').setAttribute('aria-hidden','true');
+            } else {
+                document.querySelector('.generate-section').style.display = 'none';
+                document.querySelector('.generate-section').setAttribute('aria-hidden','true');
+                document.querySelector('.read-section').style.display = '';
+                document.querySelector('.read-section').setAttribute('aria-hidden','false');
+            }
+            mainTab = tab;
+            clearMessagesAll();
+        }
+
+        // --- Tab switching inside generate ---
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', function(e) {
                 const tab = this.getAttribute('data-tab');
                 switchTab(tab);
             });
         });
-        
-        // Xử lý chuyển phương pháp nhập vị trí
-        document.querySelectorAll('input[name="location-method"]').forEach(radio => {
-            radio.addEventListener('change', function() {
-                const coordinatesInput = document.getElementById('coordinates-input');
-                const googlemapsInput = document.getElementById('googlemaps-input');
-                
-                if (this.value === 'coordinates') {
-                    coordinatesInput.classList.add('active');
-                    googlemapsInput.classList.remove('active');
-                } else {
-                    coordinatesInput.classList.remove('active');
-                    googlemapsInput.classList.add('active');
-                }
-            });
-        });
-        
+
         function switchTab(tab) {
             document.querySelectorAll('.form-content').forEach(el => {
                 el.classList.remove('active');
@@ -556,25 +597,25 @@
             document.querySelectorAll('.tab-btn').forEach(el => {
                 el.classList.remove('active');
             });
-            document.getElementById(tab).classList.add('active');
-            document.querySelector(`.tab-btn[data-tab="${tab}"]`).classList.add('active');
+            const target = document.getElementById(tab);
+            if (target) target.classList.add('active');
+            const btn = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+            if (btn) btn.classList.add('active');
             
             currentTab = tab;
             clearQRDisplay();
             clearMessage();
         }
-        
-        // Hàm escape dữ liệu WiFi
+
+        // --- Utility / Escapes / Validation ---
         function escapeWiFiString(str) {
             return str.replace(/[;:,\\]/g, '\\$&');
         }
-        
-        // Hàm escape dữ liệu vCard
+
         function escapeVCard(str) {
             return str.replace(/[;,\n]/g, '\\$&');
         }
-        
-        // Validate URL
+
         function isValidURL(url) {
             try {
                 new URL(url);
@@ -583,108 +624,71 @@
                 return false;
             }
         }
-        
-        // Validate Email
+
         function isValidEmail(email) {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             return emailRegex.test(email);
         }
-        
-        // Lấy tọa độ từ Google Maps link
+
         function extractCoordinatesFromMapLink(link) {
             try {
-                // Google Maps format: https://maps.app.goo.gl/...
-                // hoặc https://www.google.com/maps/place/.../@lat,lng
-                // hoặc https://maps.google.com/?q=lat,lng
-                
-                // Thử lấy từ URL có chứa @lat,lng
                 const atMatch = link.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
                 if (atMatch) {
-                    return {
-                        lat: atMatch[1],
-                        lng: atMatch[2]
-                    };
+                    return { lat: atMatch[1], lng: atMatch[2] };
                 }
-                
-                // Thử lấy từ query param
                 const qMatch = link.match(/[?&]q=(-?\d+\.\d+),(-?\d+\.\d+)/);
                 if (qMatch) {
-                    return {
-                        lat: qMatch[1],
-                        lng: qMatch[2]
-                    };
+                    return { lat: qMatch[1], lng: qMatch[2] };
                 }
-                
-                // Nếu là Google Maps short link, không thể extract, trả lại link gốc
-                if (link.includes('maps.app.goo.gl') || link.includes('maps.google.com')) {
-                    return null;
+                // Try to find !3dLAT!4dLNG pattern (Google maps sometimes)
+                const d3Match = link.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+                if (d3Match) {
+                    return { lat: d3Match[1], lng: d3Match[2] };
                 }
-                
                 return null;
             } catch (err) {
                 console.error('Error extracting coordinates:', err);
                 return null;
             }
         }
-        
-        // Hàm tạo nội dung QR dựa trên tab hiện tại
+
+        // --- Generate QR logic (unchanged mostly) ---
         function generateQRData() {
             const tab = currentTab;
             
             switch(tab) {
-                case 'url':
-                    const url = document.getElementById('url-input').value.trim();
-                    if (!url) {
-                        showError('Vui lòng nhập URL');
-                        return null;
-                    }
-                    if (!isValidURL(url)) {
-                        showError('URL không hợp lệ. Vui lòng nhập URL đúng định dạng');
-                        return null;
-                    }
+                case 'url': {
+                    let url = document.getElementById('url-input').value.trim();
+                    if (!url) { showError('Vui lòng nhập URL'); return null; }
+                    // add scheme if missing
+                    if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+                    if (!isValidURL(url)) { showError('URL không hợp lệ. Vui lòng nhập URL đúng định dạng'); return null; }
                     return url;
-                
-                case 'text':
+                }
+                case 'text': {
                     const text = document.getElementById('text-input').value.trim();
-                    if (!text) {
-                        showError('Vui lòng nhập văn bản');
-                        return null;
-                    }
+                    if (!text) { showError('Vui lòng nhập văn bản'); return null; }
                     return text;
-                
-                case 'wifi':
+                }
+                case 'wifi': {
                     const ssid = document.getElementById('wifi-ssid').value.trim();
                     const password = document.getElementById('wifi-password').value;
                     const security = document.getElementById('wifi-security').value;
-                    
-                    if (!ssid) {
-                        showError('Vui lòng nhập tên mạng Wifi');
-                        return null;
-                    }
-                    
-                    // Escape ký tự đặc biệt
+                    if (!ssid) { showError('Vui lòng nhập tên mạng Wifi'); return null; }
                     const escapedSsid = escapeWiFiString(ssid);
                     const escapedPass = password ? escapeWiFiString(password) : '';
-                    
                     let wifiString = `WIFI:T:${security};S:${escapedSsid};`;
-                    if (escapedPass && security !== 'nopass') {
-                        wifiString += `P:${escapedPass};`;
-                    }
+                    if (escapedPass && security !== 'nopass') wifiString += `P:${escapedPass};`;
                     wifiString += ';';
                     return wifiString;
-                
-                case 'contact':
+                }
+                case 'contact': {
                     const name = document.getElementById('contact-name').value.trim();
                     const phone = document.getElementById('contact-phone').value.trim();
                     const email = document.getElementById('contact-email').value.trim();
                     const company = document.getElementById('contact-company').value.trim();
                     const address = document.getElementById('contact-address').value.trim();
-                    
-                    if (!name) {
-                        showError('Vui lòng nhập tên');
-                        return null;
-                    }
-                    
+                    if (!name) { showError('Vui lòng nhập tên'); return null; }
                     let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
                     vcard += `FN:${escapeVCard(name)}\n`;
                     if (phone) vcard += `TEL:${phone}\n`;
@@ -693,132 +697,92 @@
                     if (address) vcard += `ADR:;;${escapeVCard(address)}\n`;
                     vcard += 'END:VCARD';
                     return vcard;
-                
-                case 'email':
+                }
+                case 'email': {
                     const emailAddr = document.getElementById('email-input').value.trim();
                     const subject = document.getElementById('email-subject').value.trim();
                     const body = document.getElementById('email-body').value.trim();
-                    
-                    if (!emailAddr) {
-                        showError('Vui lòng nhập email');
-                        return null;
-                    }
-                    
-                    if (!isValidEmail(emailAddr)) {
-                        showError('Email không hợp lệ');
-                        return null;
-                    }
-                    
+                    if (!emailAddr) { showError('Vui lòng nhập email'); return null; }
+                    if (!isValidEmail(emailAddr)) { showError('Email không hợp lệ'); return null; }
                     let emailString = `mailto:${emailAddr}`;
                     const params = [];
                     if (subject) params.push(`subject=${encodeURIComponent(subject)}`);
                     if (body) params.push(`body=${encodeURIComponent(body)}`);
                     if (params.length > 0) emailString += '?' + params.join('&');
                     return emailString;
-                
-                case 'phone':
+                }
+                case 'phone': {
                     const phoneNum = document.getElementById('phone-input').value.trim();
-                    if (!phoneNum) {
-                        showError('Vui lòng nhập số điện thoại');
-                        return null;
-                    }
+                    if (!phoneNum) { showError('Vui lòng nhập số điện thoại'); return null; }
                     return `tel:${phoneNum}`;
-                
-                case 'sms':
+                }
+                case 'sms': {
                     const smsPhone = document.getElementById('sms-phone').value.trim();
                     const smsMsg = document.getElementById('sms-message').value.trim();
-                    
-                    if (!smsPhone) {
-                        showError('Vui lòng nhập số điện thoại');
-                        return null;
-                    }
-                    
-                    // Sửa format SMS: smsto:number?body=message
+                    if (!smsPhone) { showError('Vui lòng nhập số điện thoại'); return null; }
                     let smsString = `smsto:${smsPhone}`;
                     if (smsMsg) smsString += `?body=${encodeURIComponent(smsMsg)}`;
                     return smsString;
-                
-                case 'location':
+                }
+                case 'location': {
                     const locationMethod = document.querySelector('input[name="location-method"]:checked').value;
-                    
                     if (locationMethod === 'coordinates') {
                         const lat = document.getElementById('location-lat').value.trim();
                         const lng = document.getElementById('location-lng').value.trim();
-                        
-                        if (!lat || !lng) {
-                            showError('Vui lòng nhập vĩ độ và kinh độ');
-                            return null;
-                        }
-                        
-                        // Validate tọa độ
+                        if (!lat || !lng) { showError('Vui lòng nhập vĩ độ và kinh độ'); return null; }
                         const latNum = parseFloat(lat);
                         const lngNum = parseFloat(lng);
                         if (isNaN(latNum) || isNaN(lngNum) || latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
-                            showError('Vĩ độ (-90 đến 90) và kinh độ (-180 đến 180) không hợp lệ');
-                            return null;
+                            showError('Vĩ độ (-90 đến 90) và kinh độ (-180 đến 180) không hợp lệ'); return null;
                         }
-                        
                         let locationString = `geo:${lat},${lng}`;
                         const locName = document.getElementById('location-name').value.trim();
                         if (locName) locationString += `?q=${encodeURIComponent(locName)}`;
                         return locationString;
                     } else {
-                        // Google Maps link method
                         const mapsLink = document.getElementById('location-maps-link').value.trim();
-                        if (!mapsLink) {
-                            showError('Vui lòng dán link từ Google Maps hoặc Apple Maps');
-                            return null;
-                        }
-                        
-                        // Kiểm tra xem link có hợp lệ không
+                        if (!mapsLink) { showError('Vui lòng dán link từ Google Maps hoặc Apple Maps'); return null; }
                         if (!isValidURL(mapsLink) && !mapsLink.includes('maps')) {
-                            showError('Link không hợp lệ. Vui lòng kiểm tra lại');
-                            return null;
+                            showError('Link không hợp lệ. Vui lòng kiểm tra lại'); return null;
                         }
-                        
-                        // Thử extract tọa độ nếu có thể
                         const coords = extractCoordinatesFromMapLink(mapsLink);
-                        if (coords) {
-                            // Nếu extract được tọa độ, dùng geo format
-                            return `geo:${coords.lat},${coords.lng}`;
-                        } else {
-                            // Nếu không extract được, dùng link gốc
-                            return mapsLink;
-                        }
+                        if (coords) return `geo:${coords.lat},${coords.lng}`;
+                        return mapsLink;
                     }
-                
+                }
                 default:
                     return null;
             }
         }
-        
-        // Tạo QR code
+
         async function generateQR() {
             clearMessage();
             const data = generateQRData();
             if (!data) return;
             
             currentQRData = data;
-            
             const qrcodeDiv = document.getElementById('qrcode');
             qrcodeDiv.innerHTML = '';
             
+            // Use devicePixelRatio to render sharper on high-DPI screens
+            const size = 300;
+            const ratio = window.devicePixelRatio || 1;
             const canvas = document.createElement('canvas');
-            canvas.width = 250;
-            canvas.height = 250;
+            canvas.width = size * ratio;
+            canvas.height = size * ratio;
+            canvas.style.width = size + 'px';
+            canvas.style.height = size + 'px';
             qrcodeDiv.appendChild(canvas);
             
             try {
                 await QRCode.toCanvas(canvas, data, {
-                    width: 250,
-                    margin: 2,
-                    color: {
-                        dark: '#000000',
-                        light: '#ffffff'
-                    },
+                    width: size * ratio,
+                    margin: 2 * ratio,
+                    color: { dark: '#000000', light: '#ffffff' },
                     errorCorrectionLevel: 'H'
                 });
                 
+                // if canvas was scaled for DPR, draw a CSS-scaled element already handled
                 currentCanvas = canvas;
                 
                 document.getElementById('qr-info').style.display = 'block';
@@ -830,34 +794,36 @@
                 showSuccess('✓ Tạo mã QR thành công!');
             } catch (err) {
                 console.error(err);
-                showError('Lỗi khi tạo mã QR: ' + err.message);
+                showError('Lỗi khi tạo mã QR: ' + (err.message || err));
             }
         }
-        
-        // Tải ảnh QR
+
         function downloadQR() {
             if (!currentCanvas) return;
-            
+            // Convert to PNG at device pixel ratio to keep quality
+            const dataUrl = currentCanvas.toDataURL('image/png');
             const link = document.createElement('a');
-            link.href = currentCanvas.toDataURL('image/png');
+            link.href = dataUrl;
             link.download = 'qr-code.png';
             link.click();
-            
             showSuccess('✓ Tải xuống thành công!');
         }
-        
-        // Sao chép nội dung QR
+
         function copyToClipboard() {
             if (!currentQRData) return;
-            
             navigator.clipboard.writeText(currentQRData).then(() => {
                 showSuccess('✓ Sao chép thành công!');
             }).catch(() => {
-                showError('Không thể sao chép');
+                // fallback
+                const ta = document.createElement('textarea');
+                ta.value = currentQRData;
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); showSuccess('✓ Sao chép thành công!'); } catch { showError('Không thể sao chép'); }
+                document.body.removeChild(ta);
             });
         }
-        
-        // Xóa dữ liệu chỉ trong tab hiện tại
+
         function clearCurrentTab() {
             const activeTab = document.getElementById(currentTab);
             const inputs = activeTab.querySelectorAll('input, textarea');
@@ -866,50 +832,274 @@
                     input.value = '';
                 }
             });
-            
             clearQRDisplay();
             clearMessage();
         }
-        
-        // Xóa QR
+
         function clearQRDisplay() {
             const qrcodeDiv = document.getElementById('qrcode');
-            qrcodeDiv.innerHTML = '';
-            document.getElementById('qr-info').style.display = 'none';
-            document.getElementById('download-btn').disabled = true;
-            document.getElementById('copy-btn').disabled = true;
+            if (qrcodeDiv) qrcodeDiv.innerHTML = '';
+            if (document.getElementById('qr-info')) document.getElementById('qr-info').style.display = 'none';
+            const db = document.getElementById('download-btn'); if (db) db.disabled = true;
+            const cb = document.getElementById('copy-btn'); if (cb) cb.disabled = true;
             currentQRData = null;
             currentCanvas = null;
         }
-        
+
         function showSuccess(message) {
-            const messageDiv = document.getElementById('message');
+            const messageDiv = currentMainMessageDiv();
             messageDiv.className = 'message success';
             messageDiv.textContent = message;
             setTimeout(() => {
                 if (messageDiv.textContent === message) clearMessage();
             }, 3000);
         }
-        
+
         function showError(message) {
-            const messageDiv = document.getElementById('message');
+            const messageDiv = currentMainMessageDiv();
             messageDiv.className = 'message error';
             messageDiv.textContent = '✗ ' + message;
             setTimeout(() => {
                 if (messageDiv.textContent === '✗ ' + message) clearMessage();
-            }, 3000);
+            }, 4000);
         }
-        
+
         function clearMessage() {
-            const messageDiv = document.getElementById('message');
-            messageDiv.innerHTML = '';
-            messageDiv.className = '';
+            const messageDiv = currentMainMessageDiv();
+            if (messageDiv) { messageDiv.innerHTML = ''; messageDiv.className = ''; }
         }
-        
-        // Set giá trị mặc định cho vị trí
+
+        function currentMainMessageDiv() {
+            if (mainTab === 'generate') return document.getElementById('message') || createTempMessageDiv();
+            else return document.getElementById('read-message') || createTempMessageDiv();
+        }
+
+        function createTempMessageDiv() {
+            const d = document.createElement('div'); document.body.prepend(d); return d;
+        }
+
+        function clearMessagesAll() {
+            const m1 = document.getElementById('message'); if (m1) { m1.className=''; m1.innerHTML=''; }
+            const m2 = document.getElementById('read-message'); if (m2) { m2.className=''; m2.innerHTML=''; }
+        }
+
+        // --- Read (decode) implementation ---
+        const fileInput = document.getElementById('file-input');
+        const chooseBtn = document.getElementById('choose-file-btn');
+        const dropArea = document.getElementById('drop-area');
+        const previewImg = document.getElementById('preview-img');
+        const scanCanvas = document.getElementById('scan-canvas');
+        const scanResultBox = document.getElementById('scan-result');
+        const decodedContentEl = document.getElementById('decoded-content');
+        const decodedTypeEl = document.getElementById('decoded-type');
+        const copyResultBtn = document.getElementById('copy-result-btn');
+        const openResultBtn = document.getElementById('open-result-btn');
+
+        chooseBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files[0]) handleFile(e.target.files[0]);
+        });
+
+        // Drag & drop
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropArea.addEventListener(evt, (e) => {
+                e.preventDefault(); e.stopPropagation();
+                dropArea.classList.add('dragover');
+            });
+        });
+        ['dragleave', 'drop'].forEach(evt => {
+            dropArea.addEventListener(evt, (e) => {
+                e.preventDefault(); e.stopPropagation();
+                dropArea.classList.remove('dragover');
+            });
+        });
+        dropArea.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            if (dt && dt.files && dt.files.length) handleFile(dt.files[0]);
+        });
+        // Keyboard accessibility for dropArea: press Enter to trigger file select
+        dropArea.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); }
+        });
+
+        function handleFile(file) {
+            clearReadResult();
+            if (!file.type.startsWith('image/')) {
+                showReadError('Vui lòng chọn file ảnh hợp lệ');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                const img = new Image();
+                img.onload = async function() {
+                    previewImg.src = ev.target.result;
+                    previewImg.style.display = '';
+                    // Prepare canvas to scan - scale to reasonable size while preserving ratio
+                    const maxDim = 1024;
+                    let width = img.naturalWidth;
+                    let height = img.naturalHeight;
+                    const scale = Math.min(1, maxDim / Math.max(width, height));
+                    width = Math.round(width * scale);
+                    height = Math.round(height * scale);
+                    scanCanvas.width = width;
+                    scanCanvas.height = height;
+                    scanCanvas.style.width = width + 'px';
+                    scanCanvas.style.height = height + 'px';
+                    const ctx = scanCanvas.getContext('2d');
+                    ctx.clearRect(0,0,scanCanvas.width, scanCanvas.height);
+                    ctx.drawImage(img, 0, 0, scanCanvas.width, scanCanvas.height);
+                    // Try decode (with rotations fallback)
+                    const decode = tryDecodeWithRotations(scanCanvas, ctx);
+                    decode.then(result => {
+                        if (result) {
+                            showReadSuccess(result);
+                        } else {
+                            showReadError('Không đọc được mã QR trong ảnh. Thử ảnh khác hoặc ảnh rõ hơn.');
+                        }
+                    });
+                };
+                img.onerror = function() {
+                    showReadError('Không thể đọc ảnh. Vui lòng thử file khác.');
+                };
+                img.src = ev.target.result;
+            };
+            reader.onerror = function() {
+                showReadError('Lỗi khi đọc file');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function tryDecodeWithRotations(canvas, ctx) {
+            // Try 0°, 90°, 180°, 270°
+            for (let i = 0; i < 4; i++) {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: "attemptBoth" });
+                if (code) {
+                    // Draw detection box
+                    drawDetection(ctx, code.location);
+                    return { text: code.data, location: code.location };
+                }
+                // rotate canvas by 90 deg for next attempt (create temp canvas)
+                const rotated = rotateCanvas(canvas, ctx);
+                // replace canvas/context with rotated
+                canvas.width = rotated.width; canvas.height = rotated.height;
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                ctx.drawImage(rotated.canvas, 0,0);
+            }
+            return null;
+        }
+
+        function rotateCanvas(canvas, ctx) {
+            // produce rotated canvas 90deg clockwise
+            const tmp = document.createElement('canvas');
+            tmp.width = canvas.height;
+            tmp.height = canvas.width;
+            const tctx = tmp.getContext('2d');
+            tctx.translate(tmp.width / 2, tmp.height / 2);
+            tctx.rotate(90 * Math.PI / 180);
+            tctx.drawImage(canvas, -canvas.width / 2, -canvas.height / 2);
+            return { canvas: tmp, width: tmp.width, height: tmp.height };
+        }
+
+        function drawDetection(ctx, loc) {
+            if (!loc) return;
+            ctx.strokeStyle = 'rgba(0,150,0,0.9)';
+            ctx.lineWidth = Math.max(2, (Math.min(ctx.canvas.width, ctx.canvas.height) / 200));
+            const drawLine = (a, b) => {
+                ctx.beginPath();
+                ctx.moveTo(a.x, a.y);
+                ctx.lineTo(b.x, b.y);
+                ctx.stroke();
+            };
+            drawLine(loc.topLeftCorner, loc.topRightCorner);
+            drawLine(loc.topRightCorner, loc.bottomRightCorner);
+            drawLine(loc.bottomRightCorner, loc.bottomLeftCorner);
+            drawLine(loc.bottomLeftCorner, loc.topLeftCorner);
+        }
+
+        function showReadSuccess(result) {
+            const text = result.text;
+            decodedContentEl.textContent = text;
+            const t = detectContentType(text);
+            decodedTypeEl.textContent = t;
+            scanResultBox.style.display = '';
+            // Enable buttons
+            copyResultBtn.disabled = false;
+            openResultBtn.disabled = false;
+            // wire actions
+            copyResultBtn.onclick = () => {
+                navigator.clipboard.writeText(text).then(() => {
+                    showReadMessage('✓ Sao chép thành công!', true);
+                }).catch(() => { showReadMessage('Không thể sao chép', false); });
+            };
+            openResultBtn.onclick = () => {
+                if (t === 'URL') {
+                    try { window.open(text, '_blank'); }
+                    catch { showReadMessage('Không thể mở đường dẫn', false); }
+                } else if (t === 'mailto' || t === 'tel' || t === 'sms' || t === 'smsto') {
+                    window.location.href = text;
+                } else if (t === 'WIFI' || t === 'vCard') {
+                    showReadMessage('Nội dung đặc biệt (WIFI/vCard): sao chép để dùng', true);
+                } else if (t === 'geo' || t === 'maps') {
+                    // try to open as URL
+                    try { window.open(text, '_blank'); } catch { showReadMessage('Không thể mở đường dẫn', false); }
+                } else {
+                    showReadMessage('Không có hành động mở phù hợp. Vui lòng sao chép nội dung', false);
+                }
+            };
+            showReadMessage('✓ Giải mã thành công', true);
+        }
+
+        function showReadError(msg) {
+            scanResultBox.style.display = 'none';
+            showReadMessage('✗ ' + msg, false);
+        }
+
+        function showReadMessage(msg, success) {
+            const m = document.getElementById('read-message');
+            m.className = success ? 'message success' : 'message error';
+            m.textContent = msg;
+            setTimeout(() => {
+                if (m.textContent === msg) { m.innerHTML = ''; m.className = ''; }
+            }, 4000);
+        }
+
+        function clearReadResult() {
+            previewImg.src = '';
+            previewImg.style.display = 'none';
+            scanResultBox.style.display = 'none';
+            decodedContentEl.textContent = '';
+            decodedTypeEl.textContent = '';
+            document.getElementById('read-message').innerHTML = '';
+        }
+
+        function detectContentType(text) {
+            const t = text.trim();
+            // mailto: tel: smsto: geo: WIFI: vCard, URL
+            if (/^WIFI:/i.test(t)) return 'WIFI';
+            if (/^BEGIN:VCARD/i.test(t)) return 'vCard';
+            if (/^mailto:/i.test(t)) return 'mailto';
+            if (/^tel:/i.test(t)) return 'tel';
+            if (/^smsto:/i.test(t) || /^sms:/i.test(t)) return 'smsto';
+            if (/^geo:/i.test(t)) return 'geo';
+            if (/maps\.google\.|maps\.app|maps\.apple\.|google\.com\/maps/i.test(t)) return 'maps';
+            // try URL
+            try { new URL(t); return 'URL'; } catch {}
+            return 'Plain text';
+        }
+
+        // --- Read helpers ---
+        function showReadErrorAndLog(msg) {
+            console.error(msg);
+            showReadError(msg);
+        }
+
+        // init defaults
         window.addEventListener('DOMContentLoaded', function() {
             document.getElementById('location-lat').value = '21.0285';
             document.getElementById('location-lng').value = '105.8542';
+            // wire quick message element for generate side
+            const genMessage = document.createElement('div'); genMessage.id = 'message'; document.querySelector('.generate-section').insertBefore(genMessage, document.querySelector('.generate-section').firstChild);
         });
     </script>
 </body>
