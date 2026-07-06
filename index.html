@@ -575,8 +575,8 @@
                         <div class="result-box" id="decoded-content"></div>
                     </div>
                     <div class="button-group">
-                        <button class="btn btn-copy" id="copy-result-btn">📋 Sao chép</button>
-                        <button class="btn btn-download" id="open-result-btn">🔗 Mở / Đi tới</button>
+                        <button class="btn btn-copy" id="copy-result-btn" disabled>📋 Sao chép</button>
+                        <button class="btn btn-download" id="open-result-btn" style="display:none;" disabled>🔗 Mở / Đi tới</button>
                     </div>
                 </div>
 
@@ -672,7 +672,8 @@
         }
 
         function escapeVCard(str) {
-            return str.replace(/[;,\n]/g, '\\$&');
+            // Replace CR/LF with literal \n sequence and escape ; and , characters
+            return str.replace(/\r\n|\r|\n/g, '\\n').replace(/[;,]/g, '\\$&');
         }
 
         function isValidURL(url) {
@@ -738,7 +739,8 @@
                     const escapedPass = password ? escapeWiFiString(password) : '';
                     let wifiString = `WIFI:T:${security};S:${escapedSsid};`;
                     if (escapedPass && security !== 'nopass') wifiString += `P:${escapedPass};`;
-                    wifiString += ';';
+                    // ensure single ending semicolon
+                    if (!wifiString.endsWith(';')) wifiString += ';';
                     return wifiString;
                 }
                 case 'contact': {
@@ -884,12 +886,18 @@
 
         function clearCurrentTab() {
             const activeTab = document.getElementById(currentTab);
-            const inputs = activeTab.querySelectorAll('input, textarea');
+            const inputs = activeTab.querySelectorAll('input, textarea, select');
             inputs.forEach(input => {
                 if (input.type !== 'button' && input.type !== 'submit' && input.type !== 'radio') {
                     input.value = '';
                 }
+                if (input.tagName.toLowerCase() === 'select') {
+                    input.selectedIndex = 0;
+                }
             });
+            // reset radios to default (if needed)
+            const radios = activeTab.querySelectorAll('input[type="radio"]');
+            radios.forEach(r => { if (r.defaultChecked) r.checked = true; });
             clearQRDisplay();
             clearMessage();
         }
@@ -1071,36 +1079,51 @@
             drawLine(loc.bottomLeftCorner, loc.topLeftCorner);
         }
 
+        // --- Modified: showReadSuccess and clearReadResult ---
         function showReadSuccess(result) {
             const text = result.text;
             decodedContentEl.textContent = text;
             const t = detectContentType(text);
             decodedTypeEl.textContent = t;
             scanResultBox.style.display = '';
-            // Enable buttons
+
+            // Quyết định xem có hiển thị nút "Mở / Đi tới" hay không.
+            // Chỉ hiển thị cho URL, maps hoặc geo (các nội dung có thể mở như links).
+            const isOpenable = (function() {
+                if (t === 'URL' || t === 'maps' || t === 'geo') return true;
+                // Nếu detectContentType chưa bắt được nhưng text là http/https, cũng mở được
+                if (/^https?:\/\//i.test(text)) return true;
+                return false;
+            })();
+
+            // Bật/tắt nút sao chép
             copyResultBtn.disabled = false;
-            openResultBtn.disabled = false;
-            // wire actions
             copyResultBtn.onclick = () => {
                 navigator.clipboard.writeText(text).then(() => {
                     showReadMessage('✓ Sao chép thành công!', true);
                 }).catch(() => { showReadMessage('Không thể sao chép', false); });
             };
-            openResultBtn.onclick = () => {
-                if (t === 'URL') {
-                    try { window.open(text, '_blank'); }
-                    catch { showReadMessage('Không thể mở đường dẫn', false); }
-                } else if (t === 'mailto' || t === 'tel' || t === 'sms' || t === 'smsto') {
-                    window.location.href = text;
-                } else if (t === 'WIFI' || t === 'vCard') {
-                    showReadMessage('Nội dung đặc biệt (WIFI/vCard): sao chép để dùng', true);
-                } else if (t === 'geo' || t === 'maps') {
-                    // try to open as URL
-                    try { window.open(text, '_blank'); } catch { showReadMessage('Không thể mở đường dẫn', false); }
-                } else {
-                    showReadMessage('Không có hành động mở phù hợp. Vui lòng sao chép nội dung', false);
-                }
-            };
+
+            if (isOpenable) {
+                openResultBtn.style.display = '';
+                openResultBtn.disabled = false;
+                openResultBtn.onclick = () => {
+                    // Hành động mở: URL và maps/geo mở bằng new tab
+                    if (t === 'URL' || t === 'maps' || t === 'geo' || /^https?:\/\//i.test(text)) {
+                        try { window.open(text, '_blank'); }
+                        catch { showReadMessage('Không thể mở đường dẫn', false); }
+                    } else {
+                        // An toàn: nếu có loại khác vô tình đến đây, fallback thông báo
+                        showReadMessage('Không có hành động mở phù hợp. Vui lòng sao chép nội dung', false);
+                    }
+                };
+            } else {
+                // Ẩn nút mở nếu không phải liên kết
+                openResultBtn.style.display = 'none';
+                openResultBtn.disabled = true;
+                openResultBtn.onclick = null;
+            }
+
             showReadMessage('✓ Giải mã thành công', true);
         }
 
@@ -1125,6 +1148,14 @@
             decodedContentEl.textContent = '';
             decodedTypeEl.textContent = '';
             document.getElementById('read-message').innerHTML = '';
+
+            // Reset nút hành động
+            copyResultBtn.disabled = true;
+            copyResultBtn.onclick = null;
+
+            openResultBtn.disabled = true;
+            openResultBtn.style.display = 'none';
+            openResultBtn.onclick = null;
         }
 
         function detectContentType(text) {
@@ -1146,6 +1177,10 @@
         window.addEventListener('DOMContentLoaded', function() {
             document.getElementById('location-lat').value = '21.0285';
             document.getElementById('location-lng').value = '105.8542';
+            // ensure read buttons initial state
+            copyResultBtn.disabled = true;
+            openResultBtn.disabled = true;
+            openResultBtn.style.display = 'none';
         });
     </script>
 </body>
