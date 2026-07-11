@@ -343,7 +343,7 @@
             font-size: 0.95em;
             pointer-events: none;
             text-shadow: 0 1px 2px rgba(0,0,0,0.4);
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(180deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%);
             border-top: 1px solid rgba(255,255,255,0.2);
             z-index: 100;
         }
@@ -535,7 +535,7 @@
                 
                 <div class="button-group">
                     <button class="btn btn-generate" onclick="generateQR()">Tạo Mã QR</button>
-                    <button class="btn btn-clear" onclick="clearCurrentTab()">Xóa Tab Hiện Tại</button>
+                    <button class="btn btn-clear" id="clear-btn" onclick="clearCurrentTab()" style="display:none;">Xóa Tab Hiện Tại</button>
                 </div>
 
                 <!-- Khu vực hiển thị kết quả QR (đã bổ sung) -->
@@ -848,6 +848,8 @@
                 document.getElementById('qr-info').style.display = 'block';
                 document.getElementById('qr-content').textContent = data;
                 
+                // Hiển thị nút Xóa Tab Hiện Tại
+                document.getElementById('clear-btn').style.display = '';
                 document.getElementById('download-btn').disabled = false;
                 document.getElementById('copy-btn').disabled = false;
                 
@@ -909,6 +911,8 @@
             if (qrInfo) qrInfo.style.display = 'none';
             const db = document.getElementById('download-btn'); if (db) db.disabled = true;
             const cb = document.getElementById('copy-btn'); if (cb) cb.disabled = true;
+            // Ẩn nút Xóa Tab Hiện Tại
+            const clearBtn = document.getElementById('clear-btn'); if (clearBtn) clearBtn.style.display = 'none';
             currentQRData = null;
             currentCanvas = null;
         }
@@ -1079,7 +1083,25 @@
             drawLine(loc.bottomLeftCorner, loc.topLeftCorner);
         }
 
-        // --- Modified: showReadSuccess and clearReadResult ---
+        // --- Kiểm tra xem liên kết có phải là thực sự (URL hoặc geo link) ---
+        function isRealLink(text) {
+            const t = text.trim();
+            // URL thực (http/https)
+            if (/^https?:\/\//i.test(t)) return true;
+            // geo: link (có thể mở bằng bản đồ)
+            if (/^geo:/i.test(t)) return true;
+            // maps link
+            if (/maps\.google\.|maps\.app|maps\.apple\.|google\.com\/maps/i.test(t)) return true;
+            // mailto (có thể mở email)
+            if (/^mailto:/i.test(t)) return true;
+            // tel (có thể gọi)
+            if (/^tel:/i.test(t)) return true;
+            // smsto (có thể gửi SMS)
+            if (/^smsto:|^sms:/i.test(t)) return true;
+            return false;
+        }
+
+        // --- Modified: showReadSuccess và clearReadResult ---
         function showReadSuccess(result) {
             const text = result.text;
             decodedContentEl.textContent = text;
@@ -1087,14 +1109,8 @@
             decodedTypeEl.textContent = t;
             scanResultBox.style.display = '';
 
-            // Quyết định xem có hiển thị nút "Mở / Đi tới" hay không.
-            // Chỉ hiển thị cho URL, maps hoặc geo (các nội dung có thể mở như links).
-            const isOpenable = (function() {
-                if (t === 'URL' || t === 'maps' || t === 'geo') return true;
-                // Nếu detectContentType chưa bắt được nhưng text là http/https, cũng mở được
-                if (/^https?:\/\//i.test(text)) return true;
-                return false;
-            })();
+            // Chỉ hiển thị nút "Mở / Đi tới" nếu là liên kết thực sự
+            const isOpenable = isRealLink(text);
 
             // Bật/tắt nút sao chép
             copyResultBtn.disabled = false;
@@ -1108,17 +1124,11 @@
                 openResultBtn.style.display = '';
                 openResultBtn.disabled = false;
                 openResultBtn.onclick = () => {
-                    // Hành động mở: URL và maps/geo mở bằng new tab
-                    if (t === 'URL' || t === 'maps' || t === 'geo' || /^https?:\/\//i.test(text)) {
-                        try { window.open(text, '_blank'); }
-                        catch { showReadMessage('Không thể mở đường dẫn', false); }
-                    } else {
-                        // An toàn: nếu có loại khác vô tình đến đây, fallback thông báo
-                        showReadMessage('Không có hành động mở phù hợp. Vui lòng sao chép nội dung', false);
-                    }
+                    try { window.open(text, '_blank'); }
+                    catch { showReadMessage('Không thể mở đường dẫn', false); }
                 };
             } else {
-                // Ẩn nút mở nếu không phải liên kết
+                // Ẩn nút mở nếu không phải liên kết thực
                 openResultBtn.style.display = 'none';
                 openResultBtn.disabled = true;
                 openResultBtn.onclick = null;
